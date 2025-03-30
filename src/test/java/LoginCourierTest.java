@@ -16,7 +16,7 @@ public class LoginCourierTest {
     private String login;
     private String password;
     private String firstName;
-
+    private Integer courierId = null;
 
     @Before
     public void setUp() {
@@ -25,8 +25,8 @@ public class LoginCourierTest {
         firstName = RandomStringUtils.randomAlphabetic(10);
         CreateCourier request = new CreateCourier(login, password, firstName);
 
-        courierSteps
-                .createCourier(request);
+        courierSteps.createCourier(request)
+                .statusCode(SC_CREATED);
     }
 
     @Test
@@ -35,9 +35,10 @@ public class LoginCourierTest {
     public void shouldReturnId() {
         CourierBase request = new CourierBase(login, password);
 
-        courierSteps
-                .loginCourier(request)
-                .statusCode(SC_OK)
+        var response = courierSteps.loginCourier(request);
+        courierId = response.extract().body().path("id");
+
+        response.statusCode(SC_OK)
                 .body("id", notNullValue());
     }
 
@@ -47,8 +48,7 @@ public class LoginCourierTest {
     public void mandatoryFieldsShouldBeFilled() {
         CourierBase request = new CourierBase("", password);
 
-        courierSteps
-                .loginCourier(request)
+        courierSteps.loginCourier(request)
                 .statusCode(SC_BAD_REQUEST)
                 .body("message", is("Недостаточно данных для входа"));
     }
@@ -57,25 +57,19 @@ public class LoginCourierTest {
     @DisplayName("Авторизация c неверным паролем")
     @Description("Попытка авторизоваться в существующий аккаунт используя неверный пароль")
     public void wrongPasswordNotFound() {
-        CourierBase request = new CourierBase(login, "1234");
+        CourierBase request = new CourierBase(login, "неверный_пароль");
 
-        courierSteps
-                .loginCourier(request)
+        courierSteps.loginCourier(request)
                 .statusCode(SC_NOT_FOUND)
                 .body("message", is("Учетная запись не найдена"));
     }
 
     @After
     public void tearDown() {
-        CourierBase request = new CourierBase(login, "1234");
-
-        Integer id = courierSteps.loginCourier(request)
-                .extract().body().path("id");
-        if (id != null) {
-            courierSteps.deleteCourier(id);
-        }
+        try {
+            CourierBase request = new CourierBase(login, password);
+            courierId = courierSteps.loginCourier(request)
+                    .extract().body().path("id");
+        } catch (Exception ignored) { }
     }
-
-
 }
-

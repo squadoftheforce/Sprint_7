@@ -1,13 +1,14 @@
 import dto.request.CreateOrder;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import com.github.javafaker.Faker;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -15,6 +16,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 @RunWith(Parameterized.class)
 public class CreateOrderTest {
     private CreateOrderSteps createOrderSteps = new CreateOrderSteps();
+    private Faker faker = new Faker(new Locale("ru"));
 
     String firstName;
     String lastName;
@@ -44,14 +46,14 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа")
     @Description("Проверяем, создаётся ли заказ при правильном заполнении полей")
     public void responseShouldContentTrackNumber() {
-        firstName = RandomStringUtils.randomAlphabetic(10);
-        lastName = RandomStringUtils.randomAlphabetic(10);
-        address = RandomStringUtils.randomAlphabetic(10);
-        metroStation = RandomStringUtils.randomAlphabetic(10);
-        phone = RandomStringUtils.randomNumeric(11);
-        rentTime = RandomStringUtils.randomNumeric(1);
+        firstName = faker.name().firstName();
+        lastName = faker.name().lastName();
+        address = faker.address().streetAddress();
+        metroStation = faker.address().city();
+        phone = faker.numerify("79#########");
+        rentTime = String.valueOf(faker.number().numberBetween(1, 7));
         deliveryDate = "2025-03-12";
-        comment = RandomStringUtils.randomAlphabetic(10);
+        comment = faker.lorem().sentence();
 
         CreateOrder request = new CreateOrder(firstName, lastName, address, metroStation,
                 phone, rentTime, deliveryDate, comment, color);
